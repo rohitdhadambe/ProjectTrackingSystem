@@ -36,14 +36,28 @@ function Login() {
 
     try {
       const { endpoint, authority } = roleMap[role];
-      const response = await fetch(endpoint);
+      console.log('Attempting login with endpoint:', endpoint, 'authority:', authority);
+      
+      const response = await fetch(endpoint, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
 
       if (!response.ok) {
-        throw new Error(`API returned status ${response.status}`); // Corrected template literal
+        console.error('API response not OK:', response.status, response.statusText);
+        throw new Error(`API returned status ${response.status}`);
       }
 
       const result = await response.json();
-      console.log('API data:', result);
+      console.log('API data received:', result);
+
+      if (!Array.isArray(result)) {
+        console.error('API response is not an array:', result);
+        setError('Unexpected API response format');
+        return;
+      }
 
       const user = result.find((user) =>
         user.email.trim().toLowerCase() === email.trim().toLowerCase() &&
@@ -52,15 +66,14 @@ function Login() {
       );
 
       if (user) {
-        console.log(`Navigating to: ${role === 'Admin Console' ? '/admin' : '/investigator/dashboard'}`);
-        navigate('/admin');
+        console.log('User found:', user);
         const updatedUser = {
           ...user,
           UniqeID: user.authority === 'Admin Head' ? user.adminUniqe_id : user.investigatorUniqe_id,
           ID: user.authority === 'Admin Head' ? user.admin_id : user.investigator_id
         };
         
-        console.log(updatedUser);
+        console.log('Updated user data:', updatedUser);
         
         login({
           email: updatedUser.email,
@@ -68,8 +81,16 @@ function Login() {
           UniqeID: updatedUser.UniqeID,
           ID: updatedUser.ID
         });
-        navigate(role === 'Admin Console' ? '/admin' : '/investigator/dashboard');
+        
+        const redirectPath = role === 'Admin Console' ? '/admin' : '/investigator/dashboard';
+        console.log(`Navigating to: ${redirectPath}`);
+        navigate(redirectPath);
       } else {
+        console.log('User not found. Provided credentials:');
+        console.log('Email:', email);
+        console.log('Password:', password);
+        console.log('Authority:', authority);
+        console.log('Users in database:', result.map(u => ({ email: u.email, authority: u.authority })));
         setError('Invalid credentials or role.');
       }
     } catch (error) {

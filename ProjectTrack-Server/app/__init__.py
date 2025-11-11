@@ -8,9 +8,11 @@ load_dotenv()
 
 def create_app():
     app = Flask(__name__)
-    CORS(app, resources={r"/*": {"origins": ["http://localhost:5173"]}},
-         supports_credentials=True,
-         allow_headers=["Content-Type", "Authorization"])
+    CORS(app, 
+         resources={r"/*": {"origins": ["http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:5173", "http://127.0.0.1:5174"]}},
+         supports_credentials=False,
+         allow_headers=["Content-Type", "Authorization"],
+         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
     app.config.from_object(Config)
 
     db.init_app(app)
@@ -21,8 +23,7 @@ def create_app():
     with app.app_context():
         db.create_all()
 
-        # register blueprints for routes
-         # Register blueprints
+    # Register blueprints for routes
     from app.routes import register_blueprints
     register_blueprints(app)
 

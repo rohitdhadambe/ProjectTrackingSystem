@@ -7,28 +7,6 @@ from flask_cors import CORS
 
 load_dotenv()
 
-def create_app():
-    app = Flask(__name__)
-    CORS(app, resources={r"/*": {"origins": ["http://localhost:5173"]}},
-         supports_credentials=True,
-         allow_headers=["Content-Type", "Authorization"])
-    app.config.from_object(Config)
-
-    # Initialize the database
-    db.init_app(app)
-
-    # Import models to register them with SQLAlchemy
-    from app.models import Admin, Investigator, Agency, SubInvestigator  # Added SubInvestigator and Agency models
-
-    # Register blueprints
-    register_blueprints(app)
-
-    # Create database tables if they don't exist
-    with app.app_context():
-        db.create_all()
-
-    return app
-
 def register_blueprints(app):
     from app.routes.admin import admin_bp
     from app.routes.investigator import investigator_bp
